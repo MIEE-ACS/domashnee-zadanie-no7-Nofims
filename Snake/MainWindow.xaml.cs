@@ -28,7 +28,12 @@ namespace Snake
         List<PositionedEntity> snake;
         // яблоко
         Apple apple;
-        //количество очков
+        // лжеяблоко
+        Bait bait;
+
+       
+        
+            //количество очков
         int score;
         //таймер по которому 
         DispatcherTimer moveTimer;
@@ -52,6 +57,7 @@ namespace Snake
         //метод перерисовывающий экран
         private void UpdateField()
         {
+           
             //обновляем положение элементов змеи
             foreach (var p in snake)
             {
@@ -62,7 +68,10 @@ namespace Snake
             //обновляем положение яблока
             Canvas.SetTop(apple.image, apple.y);
             Canvas.SetLeft(apple.image, apple.x);
-            
+
+           
+           
+
             //обновляем количество очков
             lblScore.Content = String.Format("{0}000", score);
         }
@@ -109,6 +118,24 @@ namespace Snake
                 var part = new BodyPart(snake.Last());
                 canvas1.Children.Add(part.image);
                 snake.Add(part);
+                Random rand = new Random();
+                int v = rand.Next(20);
+                if (v == 1)
+                {
+                    canvas1.Children.Add(bait.image);
+                    Canvas.SetTop(bait.image, bait.y);
+                    Canvas.SetLeft(bait.image, bait.x);
+                }
+            }
+            //проверяем, что голова змеи врезалась в лжеяблоко
+            if (head.x == bait.x && head.y == bait.y)
+            {
+                //уменьшаем счет
+                score = score-10;
+                //двигаем яблоко на новое место
+                bait.move();
+
+               
             }
             //перерисовываем экран
             UpdateField();
@@ -149,8 +176,10 @@ namespace Snake
             // добавляем поле на канвас
             canvas1.Children.Add(field.image);
             // создаем новое яблоко и добавлем его
+           
             apple = new Apple(snake);
             canvas1.Children.Add(apple.image);
+            bait = new Bait(snake);
             // создаем голову
             head = new Head();
             snake.Add(head);
@@ -224,6 +253,7 @@ namespace Snake
                     m_y = value;
                 }
             }
+           
         }
 
         public class Apple : PositionedEntity
@@ -236,6 +266,7 @@ namespace Snake
                 move();
             }
 
+
             public override void move()
             {
                 Random rand = new Random();
@@ -243,6 +274,44 @@ namespace Snake
                 {
                     x = rand.Next(13) * 40 + 40;
                     y = rand.Next(13) * 40 + 40;
+                   
+
+                    bool overlap = false;
+                    foreach (var p in m_snake)
+                    {
+                        if (p.x == x && p.y == y)
+                        {
+                            overlap = true;
+                            break;
+                        }
+                    }
+                    if (!overlap)
+                        break;
+                } while (true);
+
+            }
+        }
+        public class Bait : PositionedEntity
+        {
+            List<PositionedEntity> m_snake;
+
+            public Bait(List<PositionedEntity> s)
+                : base(0, 0, 40, 40, "pack://application:,,,/Resources/fruit.png")
+            {
+                m_snake = s;
+                move();
+            }
+
+
+            public override void move()
+            {
+                Random rand = new Random();
+                do
+                {
+                    x = rand.Next(13) * 40 + 40;
+                    y = rand.Next(13) * 40 + 40;
+                   
+
                     bool overlap = false;
                     foreach (var p in m_snake)
                     {
